@@ -82,7 +82,7 @@ $('input[name="daterange"]').daterangepicker(
 
 `timePickerSeconds`: (boolean) Show seconds in the timePicker
 
-`ranges`: (object) Set predefined date ranges the user can select from. Each key is the label for the range, and its value an array with two dates representing the bounds of the range
+`ranges`: (object) Set predefined date ranges the user can select from. Each key is the label for the range, and its value can be an array with two dates representing the bounds of the range or a function that returns two dates representing the bounds of the range
 
 `opens`: (string: 'left'/'right'/'center') Whether the picker appears aligned to the left, to the right, or centered under the HTML element it's attached to
 
