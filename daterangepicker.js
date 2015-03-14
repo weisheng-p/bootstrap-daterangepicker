@@ -333,37 +333,41 @@
 
             if (typeof options.ranges === 'object') {
                 for (range in options.ranges) {
+                    if (typeof options.ranges[range] === 'function') {
+                        this.ranges[range] = options.ranges[range];
+                    } else {
+                        if (typeof options.ranges[range][0] === 'string')
+                            start = moment(options.ranges[range][0], this.format);
+                        else
+                            start = moment(options.ranges[range][0]);
 
-                    if (typeof options.ranges[range][0] === 'string')
-                        start = moment(options.ranges[range][0], this.format);
-                    else
-                        start = moment(options.ranges[range][0]);
+                        if (typeof options.ranges[range][1] === 'string')
+                            end = moment(options.ranges[range][1], this.format);
+                        else
+                            end = moment(options.ranges[range][1]);
 
-                    if (typeof options.ranges[range][1] === 'string')
-                        end = moment(options.ranges[range][1], this.format);
-                    else
-                        end = moment(options.ranges[range][1]);
+                        // If we have a min/max date set, bound this range
+                        // to it, but only if it would otherwise fall
+                        // outside of the min/max.
+                        if (this.minDate && start.isBefore(this.minDate))
+                            start = moment(this.minDate);
 
-                    // If we have a min/max date set, bound this range
-                    // to it, but only if it would otherwise fall
-                    // outside of the min/max.
-                    if (this.minDate && start.isBefore(this.minDate))
-                        start = moment(this.minDate);
+                       if (this.maxDate && end.isAfter(this.maxDate))
+                            end = moment(this.maxDate);
 
-                    if (this.maxDate && end.isAfter(this.maxDate))
-                        end = moment(this.maxDate);
+                        // If the end of the range is before the minimum (if min is set) OR
+                        // the start of the range is after the max (also if set) don't display this
+                        // range option.
+                        if ((this.minDate && end.isBefore(this.minDate)) || (this.maxDate && start.isAfter(this.maxDate))) {
+                            continue;
+                        }
 
-                    // If the end of the range is before the minimum (if min is set) OR
-                    // the start of the range is after the max (also if set) don't display this
-                    // range option.
-                    if ((this.minDate && end.isBefore(this.minDate)) || (this.maxDate && start.isAfter(this.maxDate))) {
-                        continue;
+                        this.ranges[range] = [start, end];
                     }
-
-                    this.ranges[range] = [start, end];
                 }
 
                 var list = '<ul>';
+
                 for (range in this.ranges) {
                     list += '<li>' + range + '</li>';
                 }
@@ -654,6 +658,9 @@
                 this.updateView();
             } else {
                 var dates = this.ranges[label];
+                if (typeof dates === 'function') {
+                    dates = dates();
+                }
                 this.container.find('input[name=daterangepicker_start]').val(dates[0].format(this.format));
                 this.container.find('input[name=daterangepicker_end]').val(dates[1].format(this.format));
             }
@@ -711,7 +718,9 @@
                 this.showCalendars();
             } else {
                 var dates = this.ranges[label];
-
+                if (typeof dates === 'function') {
+                    dates = dates();
+                }
                 this.startDate = dates[0];
                 this.endDate = dates[1];
 
@@ -932,16 +941,21 @@
             this.container.find('.ranges li').removeClass('active');
             var customRange = true;
             var i = 0;
+            var rangeDates;
             for (var range in this.ranges) {
+                rangeDates = this.ranges[range];
+                if (typeof rangeDates === 'function') {
+                    rangeDates = rangeDates();
+                }
                 if (this.timePicker) {
-                    if (this.startDate.isSame(this.ranges[range][0]) && this.endDate.isSame(this.ranges[range][1])) {
+                    if (this.startDate.isSame(rangeDates[0]) && this.endDate.isSame(rangeDates[1])) {
                         customRange = false;
                         this.chosenLabel = this.container.find('.ranges li:eq(' + i + ')')
                             .addClass('active').html();
                     }
                 } else {
                     //ignore times when comparing dates if time picker is not enabled
-                    if (this.startDate.format('YYYY-MM-DD') == this.ranges[range][0].format('YYYY-MM-DD') && this.endDate.format('YYYY-MM-DD') == this.ranges[range][1].format('YYYY-MM-DD')) {
+                    if (this.startDate.format('YYYY-MM-DD') == rangeDates[0].format('YYYY-MM-DD') && this.endDate.format('YYYY-MM-DD') == rangeDates[1].format('YYYY-MM-DD')) {
                         customRange = false;
                         this.chosenLabel = this.container.find('.ranges li:eq(' + i + ')')
                             .addClass('active').html();
